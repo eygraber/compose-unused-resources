@@ -195,9 +195,86 @@ class ComposeUnusedResourcesFunctionalTest {
 
     val result = runner("dumpIndexArtifacts", "-q").build()
 
-    result.output.shouldContain("INDEX:compose-unused-resources/metadata/main/resources.index")
     result.output.shouldContain("INDEX:compose-unused-resources/jvm/main/resources.index")
     result.output.shouldContain("INDEX:compose-unused-resources/jvm/test/resources.index")
+  }
+
+  @Test
+  fun `a multiplatform project registers no index artifact for metadata compilations`() {
+    write("settings.gradle.kts", """rootProject.name = "fixture"""")
+    write(
+      "build.gradle.kts",
+      """
+      plugins {
+        id("org.jetbrains.kotlin.multiplatform")
+        id("$COMPILER_PLUGIN_ID")
+      }
+
+      kotlin {
+        jvm()
+        linuxX64()
+        linuxArm64()
+      }
+      """.trimIndent() + "\n\n" + DUMP_TASK,
+    )
+
+    val result = runner("dumpIndexArtifacts", "-q").build()
+
+    result.output.shouldContain("INDEX:compose-unused-resources/jvm/main/resources.index")
+    result.output.shouldContain("INDEX:compose-unused-resources/linuxX64/main/resources.index")
+    result.output.shouldContain("INDEX:compose-unused-resources/linuxArm64/main/resources.index")
+    result.output.shouldNotContain("INDEX:compose-unused-resources/metadata/")
+  }
+
+  @Test
+  fun `an excluded target registers no index artifact`() {
+    write("settings.gradle.kts", """rootProject.name = "fixture"""")
+    write(
+      "build.gradle.kts",
+      """
+      plugins {
+        id("org.jetbrains.kotlin.multiplatform")
+        id("$COMPILER_PLUGIN_ID")
+      }
+
+      kotlin {
+        jvm()
+        linuxX64()
+      }
+
+      $COMPILER_EXTENSION_NAME {
+        excludeTargets("linuxX64")
+      }
+      """.trimIndent() + "\n\n" + DUMP_TASK,
+    )
+
+    val result = runner("dumpIndexArtifacts", "-q").build()
+
+    result.output.shouldContain("INDEX:compose-unused-resources/jvm/main/resources.index")
+    result.output.shouldNotContain("INDEX:compose-unused-resources/linuxX64/")
+  }
+
+  @Test
+  fun `excluding test compilations keeps only the main index artifact`() {
+    write("settings.gradle.kts", """rootProject.name = "fixture"""")
+    write(
+      "build.gradle.kts",
+      """
+      plugins {
+        id("org.jetbrains.kotlin.jvm")
+        id("$COMPILER_PLUGIN_ID")
+      }
+
+      $COMPILER_EXTENSION_NAME {
+        includeTestCompilations.set(false)
+      }
+      """.trimIndent() + "\n\n" + DUMP_TASK,
+    )
+
+    val result = runner("dumpIndexArtifacts", "-q").build()
+
+    result.output.shouldContain("INDEX:compose-unused-resources/kotlin/main/resources.index")
+    result.output.shouldNotContain("INDEX:compose-unused-resources/kotlin/test/")
   }
 
   @Test

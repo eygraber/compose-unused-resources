@@ -29,4 +29,15 @@ class ComposeUnusedResourcesGradlePluginTest {
       .shouldNotBeNull()
       .name shouldBe "compose-resource-index"
   }
+
+  @Test
+  fun `applying the plugin creates the compiler extension with defaults`() {
+    val project = ProjectBuilder.builder().withProjectDir(temp.newFolder()).build()
+
+    project.plugins.apply(ComposeUnusedResourcesGradlePlugin::class.java)
+
+    val extension = project.extensions.getByType(UnusedComposeResourcesCompilerExtension::class.java)
+    extension.excludedTargets.get() shouldBe emptySet()
+    extension.includeTestCompilations.get().shouldBeTrue()
+  }
 }
