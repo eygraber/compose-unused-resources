@@ -6,6 +6,7 @@ import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.plugin.InternalSubpluginOption
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileTool
@@ -13,9 +14,16 @@ import java.io.File
 import java.io.IOException
 
 private const val COMPOSE_RESOURCE_INDEX_USAGE = "compose-resource-index"
+internal const val COMPILER_EXTENSION_NAME = "unusedComposeResourcesCompiler"
 
 public class ComposeUnusedResourcesGradlePlugin : KotlinCompilerPluginSupportPlugin {
   override fun apply(target: Project) {
+    val extension = target.extensions.create(
+      COMPILER_EXTENSION_NAME,
+      UnusedComposeResourcesCompilerExtension::class.java,
+    )
+    extension.includeTestCompilations.convention(true)
+
     val usage = target.objects.named(Usage::class.java, COMPOSE_RESOURCE_INDEX_USAGE)
     target.configurations.consumable(COMPOSE_RESOURCE_INDEX_CONFIGURATION) {
       attributes.attribute(Usage.USAGE_ATTRIBUTE, usage)
@@ -34,7 +42,17 @@ public class ComposeUnusedResourcesGradlePlugin : KotlinCompilerPluginSupportPlu
     )
   }
 
-  override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
+  override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean {
+    if(kotlinCompilation.target.platformType == KotlinPlatformType.common) return false
+
+    val extension = kotlinCompilation.target.project.extensions.getByType(
+      UnusedComposeResourcesCompilerExtension::class.java,
+    )
+    if(kotlinCompilation.target.name in extension.excludedTargets.get()) return false
+
+    val isTestCompilation = kotlinCompilation.associatedCompilations.isNotEmpty()
+    return !isTestCompilation || extension.includeTestCompilations.get()
+  }
 
   override fun applyToCompilation(
     kotlinCompilation: KotlinCompilation<*>,

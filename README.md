@@ -40,6 +40,29 @@ plugins {
 The task skips a module without the compiler plugin. A resource that only a skipped module
 references is reported as unused.
 
+## Select compilations
+
+The compiler plugin indexes every platform compilation of a module, test compilations included. It
+does not index metadata compilations, because each platform compilation compiles the common source
+sets.
+
+The `unusedComposeResourcesCompiler` extension removes compilations from the index. The task
+compiles only the compilations that the plugin indexes.
+
+```kotlin
+unusedComposeResourcesCompiler {
+  excludeTargets("iosArm64", "iosSimulatorArm64")
+  includeTestCompilations.set(false)
+}
+```
+
+`excludeTargets` removes every compilation of the named Kotlin targets. A resource that only an
+excluded target references is reported as unused.
+
+`includeTestCompilations` defaults to true. Set it to false to report a resource that only tests
+reference. A test compilation, such as `test` or the Android `hostTest`, is a compilation associated
+with another compilation.
+
 ## Usage
 
 Run the `findUnusedComposeResources` task from the root project.
@@ -95,7 +118,7 @@ unusedComposeResources {
 
 ## How detection works
 
-The compiler plugin walks the compiled IR of each Kotlin compilation.
+The compiler plugin walks the compiled IR of each indexed compilation.
 
 - A property with a getter that returns one of the checked resource types counts as a declaration.
 - A call to such a property counts as a reference.
@@ -104,7 +127,8 @@ The compiler plugin walks the compiled IR of each Kotlin compilation.
 - References in generated Compose code do not count. The generated resource collectors reference
   every accessor.
 
-Each compilation writes its index to `build/compose-unused-resources/<target>/<compilation>.index`.
+Each indexed compilation writes its index to
+`build/compose-unused-resources/<target>/<compilation>/resources.index`.
 The task subtracts the referenced accessors from the declared accessors across every index.
 
 [Compose Multiplatform resources]: https://kotlinlang.org/docs/multiplatform/compose-multiplatform-resources.html
