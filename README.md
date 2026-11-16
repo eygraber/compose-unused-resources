@@ -25,7 +25,7 @@ Apply the root plugin in the root project's `build.gradle.kts`.
 
 ```kotlin
 plugins {
-  id("com.eygraber.compose.unused.resources") version "1.0.2"
+  id("com.eygraber.compose.unused.resources") version "1.0.3"
 }
 ```
 
@@ -33,7 +33,7 @@ Apply the compiler plugin in each module that declares or references Compose res
 
 ```kotlin
 plugins {
-  id("com.eygraber.compose.unused.resources.compiler.plugin") version "1.0.2"
+  id("com.eygraber.compose.unused.resources.compiler.plugin") version "1.0.3"
 }
 ```
 
