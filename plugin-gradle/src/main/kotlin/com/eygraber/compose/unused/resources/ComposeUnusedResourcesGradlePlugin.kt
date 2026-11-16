@@ -30,7 +30,7 @@ public class ComposeUnusedResourcesGradlePlugin : KotlinCompilerPluginSupportPlu
     return SubpluginArtifact(
       groupId = "com.eygraber",
       artifactId = "compose-unused-resources-compiler-plugin",
-      version = manifestVersion ?: "1.0.2",
+      version = manifestVersion ?: "1.0.3",
     )
   }
 
