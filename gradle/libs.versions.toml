@@ -8,7 +8,7 @@ conventions = "0.0.105"
 kotest = "6.2.7"
 
 kotlin = "2.4.21"
-kotlinCompilerTesting = "0.14.0"
+kotlinCompilerTesting = "0.15.0"
 
 ktlint = "1.8.0"
 ktlintCustomRules = "0.1.1"
